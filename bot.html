@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Issue Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+        
+        .user-message {
+            justify-content: flex-end;
+        }
+        
+        .bot-message {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+        }
+        
+        .user-message .message-content {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .bot-message .message-content {
+            background-color: #e8f4fc;
+            color: #2c3e50;
+        }
+        
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background-color: white;
+        }
+        
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+        
+        button {
+            margin-left: 10px;
+            padding: 12px 25px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .disclaimer {
+            padding: 15px;
+            background-color: #fff8e1;
+            border-top: 1px solid #ffeaa7;
+            font-size: 12px;
+            color: #e74c3c;
+            text-align: center;
+        }
+        
+        .suggestion-chip {
+            display: inline-block;
+            background-color: #e8f4fc;
+            color: #3498db;
+            padding: 8px 15px;
+            border-radius: 18px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .suggestion-chip:hover {
+            background-color: #d1e9f9;
+        }
+        
+        .suggestions {
+            padding: 10px 15px;
+            background-color: white;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Health Issue Assistant</h1>
+            <p class="description">Describe your symptoms and I'll try to help identify possible health issues</p>
+        </header>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot-message">
+                <div class="message-content">
+                    Hi there! I'm here to help you understand possible health issues based on your symptoms. Please describe how you're feeling.
+                </div>
+            </div>
+        </div>
+        
+        <div class="suggestions">
+            <div class="suggestion-chip" onclick="addSuggestion('headache')">Headache</div>
+            <div class="suggestion-chip" onclick="addSuggestion('fever')">Fever</div>
+            <div class="suggestion-chip" onclick="addSuggestion('cough')">Cough</div>
+            <div class="suggestion-chip" onclick="addSuggestion('stomach pain')">Stomach Pain</div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Describe your symptoms..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>Important:</strong> This is not a substitute for professional medical advice. Please consult a healthcare professional for proper diagnosis and treatment.
+        </div>
+    </div>
+
+    <script>
+        // Knowledge base for health issues
+        const healthIssues = {
+            headache: {
+                description: "Headache",
+                possibleCauses: ["Tension headaches", "Migraines", "Dehydration", "Eye strain", "Sinus congestion"],
+                suggestions: ["Rest in a quiet, dark room", "Apply a cold or warm compress to your head", "Stay hydrated", "Consider over-the-counter pain relief if appropriate"]
+            },
+            fever: {
+                description: "Fever",
+                possibleCauses: ["Viral or bacterial infections", "Inflammatory conditions", "Heat exhaustion", "Certain medications"],
+                suggestions: ["Stay hydrated", "Rest", "Use a damp cloth to cool your skin", "Consider fever-reducing medication if appropriate"]
+            },
+            cough: {
+                description: "Cough",
+                possibleCauses: ["Common cold", "Flu", "Allergies", "Asthma", "Bronchitis"],
+                suggestions: ["Stay hydrated with warm liquids", "Use a humidifier", "Avoid irritants like smoke", "Consider cough drops or honey"]
+            },
+            stomach: {
+                description: "Stomach pain",
+                possibleCauses: ["Indigestion", "Food poisoning", "Gas", "Stomach virus", "Constipation"],
+                suggestions: ["Stick to bland foods", "Stay hydrated", "Avoid dairy, fatty, or spicy foods", "Apply a warm compress to your abdomen"]
+            },
+            fatigue: {
+                description: "Fatigue",
+                possibleCauses: ["Lack of sleep", "Anemia", "Thyroid issues", "Chronic fatigue syndrome", "Depression"],
+                suggestions: ["Ensure adequate sleep", "Maintain a balanced diet", "Stay hydrated", "Consider light exercise"]
+            },
+            dizziness: {
+                description: "Dizziness",
+                possibleCauses: ["Dehydration", "Inner ear problems", "Low blood pressure", "Low blood sugar", "Anxiety"],
+                suggestions: ["Sit or lie down immediately", "Stay hydrated", "Move slowly when changing positions", "Avoid caffeine and tobacco"]
+            }
+        };
+        
+        function addSuggestion(symptom) {
+            document.getElementById('userInput').value = symptom;
+            sendMessage();
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            
+            if (message === '') return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input
+            userInput.value = '';
+            
+            // Process message and generate response
+            setTimeout(() => {
+                generateResponse(message);
+            }, 500);
+        }
+        
+        function addMessage(message, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = message;
+            
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function generateResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            let response = "";
+            
+            // Check for matches in our health issues database
+            for (const [key, issue] of Object.entries(healthIssues)) {
+                if (lowerMessage.includes(key)) {
+                    response = `Based on your mention of "${key}", you might be experiencing ${issue.description}. `;
+                    response += `Possible causes include: ${issue.possibleCauses.join(', ')}. `;
+                    response += `Suggestions: ${issue.suggestions.join(', ')}.`;
+                    break;
+                }
+            }
+            
+            // If no specific issue matched, provide general response
+            if (response === "") {
+                response = "I understand you're not feeling well. For a more accurate assessment, please describe your symptoms in more detail. Remember to consult with a healthcare professional for proper diagnosis.";
+            }
+            
+            // Add disclaimer to every response
+            response += " Remember, this is not medical advice. Please consult a doctor for proper diagnosis.";
+            
+            addMessage(response, 'bot');
+        }
+    </script>
+</body>
+</html>
